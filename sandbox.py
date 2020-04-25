@@ -112,73 +112,19 @@ model.compile(loss=losses, optimizer=opt)
 y_hat = model.predict(np.array(train_input_list))
 y_hat[0]
 
+
 #%%
 
 history = model.fit(
     [np.array(train_input)],
-    [np.array(y_train_col_len), np.array(y_train_row_len)])
-
-
-#%%
-# MULTI-Input-Output-CNN
-
-def create_model():
-    input_X1 = Input(shape=(None, 1))
-    input_X2 = Input(shape=(None, 1))
-    input_Y1 = Input(shape=(None, 1))
-    input_Y2 = Input(shape=(1024, 1))
-    x_1 = Conv1D(filters=32, kernel_size=(4), strides=1, padding='same')(input_X1)
-    x_2 = Conv1D(filters=32, kernel_size=(4), strides=1, padding='same')(input_X2)
-    x_sub = Subtract()([x_1, x_2])
-    x_fin = Conv1D(32, kernel_size=(4), strides=1, padding='same', name='training_task_final_layer')(x_sub)
-    
-    y_1 = Conv1D(filters=32, kernel_size=(4), strides=1, padding='same')(input_Y1)
-    y_1_pooling = MaxPooling1D(4)(y_1)
-    #y_1_flatten = Flatten()(y_1_pooling)
-    y_2 = Conv1D(filters=32, kernel_size=(4), strides=1, padding='same')(input_Y2)
-    y_2_pooling = MaxPooling1D(4)(y_2)
-    #y_2_flatten = Flatten()(y_2_pooling)
-    y_con = concatenate([y_1_pooling, y_2_pooling])
-    y_fin = Conv1D(32, kernel_size=(4), strides=1, padding='same', name='test_task_final_layer')(y_con)
-    
-    merge = concatenate([x_fin, y_fin])
-    #flat_layer = Flatten()(merge)
-
-    
-    out_1 = Dense(11, activation='relu')(merge)
-    out_1 = Dense(128, activation='relu')(out_1)
-    out_1 = Dense(256, activation='relu')(out_1)
-    out_1 = Dense(512, activation='relu')(out_1)
-    out_1 = Dense(1, activation='softmax', name='pixel_predictor')(out_1)
-
-    out_2 = Dense(64, activation='relu')(merge)
-    out_2 = Dense(1, activation='linear', name='shape_predictor')(out_2)
-    
-    model = Model(inputs=[input_X1, input_X2, input_Y1, input_Y2], outputs=[out_1, out_2])
-    
-    opt = Adam(lr=1e-3, decay=1e-3)
-    losses = {
-        "pixel_predictor": "categorical_crossentropy",
-        "shape_predictor": "mean_absolute_error",
-    }
-
-    model.compile(loss=losses, optimizer=opt)
-    return model
-
-#multi_cnn = create_model()
-
+    [np.array(y_train_col_len), np.array(y_train_row_len)],
+    epochs=100)
 
 #%%
+import matplotlib.pyplot as plt 
 
-output_pixel_all_iterations = []
-for task in train_data:
-    full_output = np.array(task['test'][0]['output']).flatten()
-    all_iters_task = []
-    for i in range(len(full_output)): # number of iterations = number of pixels in test ouput
-        pixel = full_output[i]
-        pixel_dummies = np.array([pixel == i for i in range(0, 11)])
-        all_iters_task.append(pixel_dummies)
-    output_pixel_all_iterations.append(all_iters_task)
-output_pixel_all_iterations[0][0]
+plt.plot(range(len(history.history['loss'])), history.history['loss'])
+plt.title('training loss')
+plt.show()
 
 #%%

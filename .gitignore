@@ -131,5 +131,5 @@ dmypy.json
 
 # project 
 data/
-
-
+.vscode/
+*.code-workspace

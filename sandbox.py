@@ -5,6 +5,7 @@
 import os
 import numpy as np
 import pandas as pd
+import time 
 
 #tensorflow
 from tensorflow.keras.layers import Input, Dense, Flatten, Conv2D, MaxPooling2D, concatenate, Subtract, Dropout
@@ -18,9 +19,6 @@ np.random.seed(0)  # Set a random seed for reproducibility
 # utils
 import utils.file_handling as io
 from utils import plotting as plt
-
-
-
 
 
 
@@ -63,6 +61,9 @@ cat_color = CategoricalDtype(categories=[i for i in range(10)])
 flatten = lambda x: [item for row in x for item in row]
 train_input = []
 train_output = []
+
+train_input_2 = []
+train_output_2 = []
 y_train_col_len  = []
 y_train_row_len  = []
 y_train_unique_colors_sum = []
@@ -72,8 +73,17 @@ test_output_list = []
 
 for task in train_data:
     for sample in task['train']:
-        train_input.append(enhance_mat_30x30(sample['input']))
+
+        input_1 = sample['input']
+        sample_2 = {'input':[]}
+        while sample_2['input'] != input_1:
+            sample_2 = random.choice(task['train'])
+        
+        train_input.append(enhance_mat_30x30(input_1))
         train_output.append(enhance_mat_30x30(sample['output']))
+        
+        train_input_2.append(enhance_mat_30x30(sample_2['input']))
+        train_output_2.append(enhance_mat_30x30(sample_2['output']))
 
         unique_colors = pd.Series(list(set(flatten(sample['output'])))).astype(cat_color)
         y_train_col_len.append(len(sample['output']))
@@ -94,29 +104,47 @@ for task in train_data:
 
 #%%
 
+# input
 input_X1 = Input(shape=(30, 30, 1))
+input_X2 = Input(shape=(30, 30, 1))
+output_X2 = Input(shape=(30, 30, 1))
+
+# convolution layers
 x_1 = Conv2D(64, (3, 3), activation='relu')(input_X1)
 x_1 = MaxPooling2D(pool_size=(2, 2))(x_1)
 x_1 = Dropout(0.25)(x_1)
 x_1 = Flatten()(x_1)
-x_1 = Dense(128, activation='relu')(x_1)
-x_1 = Dropout(0.5)(x_1)
+
+x_2 = Conv2D(64, (3, 3), activation='relu')(input_X2)
+x_2 = MaxPooling2D(pool_size=(2, 2))(x_2)
+x_2 = Dropout(0.25)(x_2)
+x_2 = Flatten()(x_2)
+
+x_2_out = Conv2D(64, (3, 3), activation='relu')(output_X2)
+x_2_out = MaxPooling2D(pool_size=(2, 2))(x_2_out)
+x_2_out = Dropout(0.25)(x_2_out)
+x_2_out = Flatten()(x_2_out)
+
+merge = concatenate([x_1, x_2, x_2_out])
+
+merge = Dense(128, activation='relu')(merge)
+merge = Dropout(0.5)(merge)
 
 # regression layers
-out_1 = Dense(128, activation='relu')(x_1)
+out_1 = Dense(128, activation='relu')(merge)
 out_1 = Dense(1, activation='linear', name='rows')(out_1)
 
-out_2 = Dense(128, activation='relu')(x_1)
+out_2 = Dense(128, activation='relu')(merge)
 out_2 = Dense(1, activation='linear', name='cols')(out_2)
 
-out_3 = Dense(128, activation='relu')(x_1)
+out_3 = Dense(128, activation='relu')(merge)
 out_3 = Dense(1, activation='linear', name='unique_colors_sum')(out_3)
 
 # multi-label classification layers
-out_4 = Dense(128, activation='relu')(x_1)
+out_4 = Dense(128, activation='relu')(merge)
 out_4 = Dense(10, activation='sigmoid', name='unique_colors_cat')(out_4)
 
-model = Model(inputs=[input_X1], outputs=[out_1, out_2, out_3, out_4])
+model = Model(inputs=[input_X1, input_X2, output_X2], outputs=[out_1, out_2, out_3, out_4])
 
 opt = Adam(lr=1e-3, decay=1e-3)
 losses = {
@@ -132,8 +160,13 @@ model.compile(loss=losses, optimizer=opt)
 
 #%%
 
+start = time.time()
+
 history = model.fit(
-    [np.array(train_input)],
+    [
+        np.array(train_input),
+        np.array(train_input_2),
+        np.array(train_output_2)],
     [
         np.array(y_train_col_len),
         np.array(y_train_row_len),
@@ -142,6 +175,8 @@ history = model.fit(
         ],
     epochs=100)
 
+print('training time {} minutes'.format((time.time()-start)/60)
+
 
 #%%
 import matplotlib.pyplot as plt 
@@ -149,8 +184,6 @@ import matplotlib.pyplot as plt
 plt.plot(range(len(history.history['loss'])), history.history['loss'])
 plt.title('training loss')
 plt.show()
-
-
 
 
 #%%

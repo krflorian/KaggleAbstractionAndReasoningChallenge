@@ -30,6 +30,7 @@ training_path = os.getcwd()+'/data/training/'
 train_data = io.get_tasks(training_path)
 
 def preprocess_task(task):
+    # TODO update
     train_input_list = []
     train_output_list = []
     test_input_list = []
@@ -56,10 +57,12 @@ def enhance_mat_30x30(mat):
 
 #%%
 
+flatten = lambda x: [item for row in x for item in row]
 train_input = []
 train_output = []
 y_train_col_len  = []
 y_train_row_len  = []
+y_train_unique_colors = []
 test_input_list = []
 test_output_list = []
 
@@ -69,6 +72,7 @@ for task in train_data:
         train_output.append(enhance_mat_30x30(sample['output']))
         y_train_col_len.append(len(sample['output']))
         y_train_row_len.append(len(sample['output'][0]))
+        y_train_unique_colors.append(len(set(flatten(sample['output']))))
     for sample in task['test']:
         test_input_list.append(enhance_mat_30x30(sample['input']))
         test_output_list.append(enhance_mat_30x30(sample['output']))
@@ -96,14 +100,36 @@ out_1 = Dense(1, activation='linear', name='rows')(out_1)
 out_2 = Dense(128, activation='relu')(x_1)
 out_2 = Dense(1, activation='linear', name='cols')(out_2)
 
-model = Model(inputs=[input_X1], outputs=[out_1, out_2])
+out_3 = Dense(128, activation='relu')(x_1)
+out_3 = Dense(1, activation='linear', name='unique_colors')(out_3)
+
+model = Model(inputs=[input_X1], outputs=[out_1, out_2, out_3])
 
 opt = Adam(lr=1e-3, decay=1e-3)
 losses = {
     "rows": "mean_absolute_error",
-    "cols": "mean_absolute_error"}
+    "cols": "mean_absolute_error",
+    "unique_colors": "mean_absolute_error"}
 
 model.compile(loss=losses, optimizer=opt)
+
+
+
+#%%
+
+history = model.fit(
+    [np.array(train_input)],
+    [np.array(y_train_col_len), np.array(y_train_row_len), np.array(y_train_unique_colors)],
+    epochs=100)
+
+
+#%%
+import matplotlib.pyplot as plt 
+
+plt.plot(range(len(history.history['loss'])), history.history['loss'])
+plt.title('training loss')
+plt.show()
+
 
 
 
@@ -112,19 +138,5 @@ model.compile(loss=losses, optimizer=opt)
 y_hat = model.predict(np.array(train_input_list))
 y_hat[0]
 
-
-#%%
-
-history = model.fit(
-    [np.array(train_input)],
-    [np.array(y_train_col_len), np.array(y_train_row_len)],
-    epochs=100)
-
-#%%
-import matplotlib.pyplot as plt 
-
-plt.plot(range(len(history.history['loss'])), history.history['loss'])
-plt.title('training loss')
-plt.show()
 
 #%%

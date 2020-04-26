@@ -9,6 +9,20 @@ import copy
 # All the methods will take a task_list, apply transformations
 # and return the transformed_task_list + [y_labels]
 
+# currently there to use:
+"""
+def rotate_tasks(task_list):
+    return rotated_task_list, y_rotation
+def remove_line_tasks(task_list):
+    return removed_line_task_list, y_row_or_column, y_line_nr
+def change_least_common_color_tasks(task_list):
+    return changed_color_task_list, y_old_color, y_new_color
+def change_random_color_tasks(task_list):
+    return changed_color_task_list, y_old_color, y_new_color
+def shift_line_tasks(task_list):
+    return shifted_line_task_list, y_row_or_column, y_line_nr
+"""
+
 ANGLE_LIST = [
     1, # rotate 90 degrees
     2, # rotate 180 degrees

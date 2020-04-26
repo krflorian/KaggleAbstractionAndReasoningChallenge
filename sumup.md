@@ -1,11 +1,11 @@
 Pretrain task:
-1. Rotation - predict angle/direction
-2. Remove row/column - predict row or column and line number
-3. Shift line/column - predict row or column and line number
-3. Change color of non background - predict which color changed from what to which
+1. Rotation - predict angle/direction `pretrain:done`
+2. Remove row/column - predict row or column and line number `pretrain:done`
+3. Shift line/column - predict row or column and line number `pretrain:done`
+3. Change color of non background - predict which color changed from what to which `pretrain:done` (bit different then here)
 4. Expand all grids to 30 x 30 - predict size of target
 5. Predict how many colors changed in target
-6. Predict ratio of figure/background in target
+6. Predict ratio of figure/background in target 
 7. Predict how many "objects" are in input and output
 
 Idea:

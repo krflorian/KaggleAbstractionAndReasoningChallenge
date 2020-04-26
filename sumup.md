@@ -1,5 +1,4 @@
 Pretrain task:
-
 1. Rotation - predict angle/direction
 2. Remove row/column - predict row or column and line number
 3. Shift line/column - predict row or column and line number
@@ -8,6 +7,11 @@ Pretrain task:
 5. Predict how many colors changed in target
 6. Predict ratio of figure/background in target
 7. Predict how many "objects" are in input and output
+
+Idea:
+1. Model Input = (input, output)
+   1. take output from other input sometimes
+   2. model has to predict if output belongs to input or not
 
 Questions:
 

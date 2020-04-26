@@ -162,7 +162,50 @@ def change_random_color_tasks(task_list):
         changed_color_task_list.append(changed_task)
     
     return changed_color_task_list, y_old_color, y_new_color
+
+# Takes task_list and shifts a row or column from every task
+# Returns list with altered tasks +
+# labels with row or column shifted +
+# index of shifted row of column
+def shift_line_tasks(task_list):
+    task_list = get_task_list_copy(task_list)
     
+    shifted_line_task_list = []
+    y_row_or_column = []
+    y_line_nr = []
+    
+    for task in task_list:
+        row_or_col = random.choice(ROW_OR_COLUMN)
+        y_row_or_column.append(row_or_col)
+        
+        if row_or_col == 1:
+            line_nr = random.choice(range(len(task[0])))
+        else:
+            line_nr = random.choice(range(len(task)))
+            
+        y_line_nr.append(line_nr)
+        shifted_line_task_list.append(shift_line(task, row_or_col, line_nr))
+    return shifted_line_task_list, y_row_or_column, y_line_nr
+
+
+# shifts a line from a task
+# row = true -> row will be shifted
+# row = false -> column will be shifted
+# returns task with shifted line 
+def shift_line(task, row_or_col, line_nr):
+    if row_or_col == 1:
+        return shift_row(task, line_nr)
+    else:
+        return shift_column(task, line_nr)
+
+def shift_row(task, row_nr):
+    return task[row_nr].insert(0, task[row_nr].pop())
+
+def shift_column(task, col_nr):
+    task = rotate_task(task, angle=1)
+    task[col_nr].insert(0, task[col_nr].pop())
+    task = rotate_task(task, angle=3)
+    return task
     
 if __name__ == "__main__":
     test_task_1 = [[1, 1, 1], [2, 2, 2], [3, 3, 3]]
@@ -203,9 +246,18 @@ if __name__ == "__main__":
     print(y_old_color)
     print(y_new_color)
     
-    
-    # To verify that the original list is unchanged
-    print(test_task_list)
+    print("Shift Row or Col:")    
+    shifted_line_test_task_list, y_row_or_column, y_line_nr = shift_line_tasks(test_task_list)
+    #plot_matrix(test_task_list[2])
+    #plot_matrix(shifted_line_test_task_list[2])
+    print(shifted_line_test_task_list)
+    print(y_row_or_column)
+    print(y_line_nr)
     
 
+    # To verify that the original list is unchanged
+    print('Should be unchanged: ')
+    print(test_task_list)
+    
+    assert test_task_list == [[[1, 1, 1], [2, 2, 2], [3, 3, 3]], [[3, 3, 3], [2, 2, 2], [1, 1, 1]], [[1, 2, 3], [2, 2, 3], [3, 3, 3]]]
     

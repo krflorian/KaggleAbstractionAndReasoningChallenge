@@ -9,7 +9,7 @@ import pandas as pd
 #tensorflow
 from tensorflow.keras.layers import Input, Dense, Flatten, Conv2D, MaxPooling2D, concatenate, Subtract, Dropout
 from tensorflow.keras.models import Model
-
+from tensorflow.keras.losses import categorical_crossentropy
 from tensorflow.keras.optimizers import Adam
 
 import numpy as np
@@ -57,12 +57,16 @@ def enhance_mat_30x30(mat):
 
 #%%
 
+from pandas.api.types import CategoricalDtype
+cat_color = CategoricalDtype(categories=[i for i in range(10)]) 
+
 flatten = lambda x: [item for row in x for item in row]
 train_input = []
 train_output = []
 y_train_col_len  = []
 y_train_row_len  = []
-y_train_unique_colors = []
+y_train_unique_colors_sum = []
+y_train_unique_colors_cat = []
 test_input_list = []
 test_output_list = []
 
@@ -70,9 +74,13 @@ for task in train_data:
     for sample in task['train']:
         train_input.append(enhance_mat_30x30(sample['input']))
         train_output.append(enhance_mat_30x30(sample['output']))
+
+        unique_colors = pd.Series(list(set(flatten(sample['output'])))).astype(cat_color)
         y_train_col_len.append(len(sample['output']))
         y_train_row_len.append(len(sample['output'][0]))
-        y_train_unique_colors.append(len(set(flatten(sample['output']))))
+        y_train_unique_colors_sum.append(len(set(flatten(sample['output']))))
+        y_train_unique_colors_cat.append([i in unique_colors for i in range(10)])
+
     for sample in task['test']:
         test_input_list.append(enhance_mat_30x30(sample['input']))
         test_output_list.append(enhance_mat_30x30(sample['output']))
@@ -94,6 +102,7 @@ x_1 = Flatten()(x_1)
 x_1 = Dense(128, activation='relu')(x_1)
 x_1 = Dropout(0.5)(x_1)
 
+# regression layers
 out_1 = Dense(128, activation='relu')(x_1)
 out_1 = Dense(1, activation='linear', name='rows')(out_1)
 
@@ -101,15 +110,21 @@ out_2 = Dense(128, activation='relu')(x_1)
 out_2 = Dense(1, activation='linear', name='cols')(out_2)
 
 out_3 = Dense(128, activation='relu')(x_1)
-out_3 = Dense(1, activation='linear', name='unique_colors')(out_3)
+out_3 = Dense(1, activation='linear', name='unique_colors_sum')(out_3)
 
-model = Model(inputs=[input_X1], outputs=[out_1, out_2, out_3])
+# multi-label classification layers
+out_4 = Dense(128, activation='relu')(x_1)
+out_4 = Dense(10, activation='sigmoid', name='unique_colors_cat')(out_4)
+
+model = Model(inputs=[input_X1], outputs=[out_1, out_2, out_3, out_4])
 
 opt = Adam(lr=1e-3, decay=1e-3)
 losses = {
     "rows": "mean_absolute_error",
     "cols": "mean_absolute_error",
-    "unique_colors": "mean_absolute_error"}
+    "unique_colors_sum": "mean_absolute_error",
+    "unique_colors_cat": "binary_crossentropy"
+    }
 
 model.compile(loss=losses, optimizer=opt)
 
@@ -119,7 +134,12 @@ model.compile(loss=losses, optimizer=opt)
 
 history = model.fit(
     [np.array(train_input)],
-    [np.array(y_train_col_len), np.array(y_train_row_len), np.array(y_train_unique_colors)],
+    [
+        np.array(y_train_col_len),
+        np.array(y_train_row_len),
+        np.array(y_train_unique_colors_sum),
+        np.array(y_train_unique_colors_cat)
+        ],
     epochs=100)
 
 

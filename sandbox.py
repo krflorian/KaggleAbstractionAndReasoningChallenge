@@ -206,9 +206,6 @@ log.save_experiment(model, history)
 
 
 #%%
-
-
-#%%
 import matplotlib.pyplot as plt 
 
 plt.plot(range(len(history.history['loss'])), history.history['loss'])
@@ -224,3 +221,5 @@ y_hat[0]
 
 
 #%%
+
+

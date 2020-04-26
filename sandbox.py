@@ -20,7 +20,7 @@ np.random.seed(0)  # Set a random seed for reproducibility
 
 # utils
 import utils.file_handling as io
-from utils import plotting as plt
+from utils import plotting as plot
 
 
 
@@ -216,7 +216,10 @@ plt.show()
 
 #%%
 
-y_hat = model.predict(np.array(train_input_list))
+y_hat = model.predict([
+        np.array(train_input),
+        np.array(train_input_2),
+        np.array(train_output_2)])
 y_hat[0]
 
 

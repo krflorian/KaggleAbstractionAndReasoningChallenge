@@ -14,4 +14,10 @@ def plot_matrix(mat):
     plt.imshow(mat, cmap=cmap, norm=norm)
     plt.show()
 
-    
+def plot_loss(log, save = False):
+    plt.plot(range(len(log.loss['loss'])), log.loss['loss'])
+    plt.title('training loss')
+    if save:
+        plt.savefig('data/{}.PNG'.format(log.name))
+    plt.show()
+

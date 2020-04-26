@@ -20,7 +20,7 @@ np.random.seed(0)  # Set a random seed for reproducibility
 
 # utils
 import utils.file_handling as io
-from utils import plotting as plot
+from utils import plotting as plt # TODO rename shortcut
 
 
 
@@ -59,7 +59,8 @@ class logger:
         # load loss
         with open(self.logs_path, 'r') as json_file:
             loss = json.load(json_file)
-        return model, loss
+        log.loss = loss
+        return model
 
 
 def enhance_mat_30x30(mat):
@@ -73,12 +74,11 @@ def enhance_mat_30x30(mat):
 #%%
 # load experiment 
 
-"""
+
 log = logger('three_input_feature_extraction_model')
-model, loss = log.load_experiment()
+model = log.load_experiment()
 model.summary()
-"""
-import os 
+
 
 #%%
 
@@ -206,12 +206,11 @@ log.save_experiment(model, history)
 
 
 #%%
-import matplotlib.pyplot as plt 
 
-plt.plot(range(len(history.history['loss'])), history.history['loss'])
-plt.title('training loss')
-plt.savefig('data/{}.PNG'.format(log.name))
-plt.show()
+plt.plot_loss(log, 'rows_loss', save=False)
+
+
+#%%
 
 
 #%%
@@ -220,9 +219,20 @@ y_hat = model.predict([
         np.array(train_input),
         np.array(train_input_2),
         np.array(train_output_2)])
-y_hat[0]
+y_hat[0][0]
 
 
 #%%
 
+y_hat[0][1]
+
+#%%
+
+y_train_row_len[1]
+
+# %%
+# plot input output
+
+plt.plot_matrix(train_data[0]['train'][1]['input'])
+plt.plot_matrix(train_data[0]['train'][1]['output'])
 

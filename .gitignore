@@ -130,6 +130,7 @@ dmypy.json
 
 
 # project 
-data/
+evaluation/
+training/
 .vscode/
 *.code-workspace

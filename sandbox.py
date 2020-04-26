@@ -5,11 +5,13 @@
 import os
 import numpy as np
 import pandas as pd
+import json
 import time 
+import random
 
 #tensorflow
 from tensorflow.keras.layers import Input, Dense, Flatten, Conv2D, MaxPooling2D, concatenate, Subtract, Dropout
-from tensorflow.keras.models import Model
+from tensorflow.keras.models import Model, load_model
 from tensorflow.keras.losses import categorical_crossentropy
 from tensorflow.keras.optimizers import Adam
 
@@ -27,21 +29,37 @@ from utils import plotting as plt
 training_path = os.getcwd()+'/data/training/'
 train_data = io.get_tasks(training_path)
 
-def preprocess_task(task):
-    # TODO update
-    train_input_list = []
-    train_output_list = []
-    test_input_list = []
-    test_output_list = []
+class logger:
+    def __init__(self, ID):
+        self.name = ID
+        self.loss = {}
+        self.model = None
+        self.model_path = 'data/weights/{}.h5'.format(ID)
+        self.logs_path = 'data/logs/{}.json'.format(ID)
 
-    for task in train_data:
-        for sample in task['train']:
-            train_input_list.append(sample['input'])
-            train_output_list.append(sample['output'])
-        for sample in task['test']:
-            test_input_list.append(sample['input'])
-            test_output_list.append(sample['output'])
-    return train_input_list, train_output_list, test_input_list, test_output_list
+    def save_experiment(self, model, history):
+        self.model = model 
+        
+        # save NN
+        model.save(self.model_path)
+
+        # save loss
+        loss = history.history
+        for l in loss:
+            loss[l] = [float(num) for num in loss[l]]
+        self.loss = loss
+        print(os.getcwd())
+        with open(self.logs_path, 'w') as json_file:
+            json.dump(self.loss, json_file)
+
+    def load_experiment(self):
+        # load model
+        model = load_model(self.model_path)
+
+        # load loss
+        with open(self.logs_path, 'r') as json_file:
+            loss = json.load(json_file)
+        return model, loss
 
 
 def enhance_mat_30x30(mat):
@@ -52,6 +70,15 @@ def enhance_mat_30x30(mat):
         
     return np.expand_dims(empty_array, axis= 2) 
 
+#%%
+# load experiment 
+
+"""
+log = logger('three_input_feature_extraction_model')
+model, loss = log.load_experiment()
+model.summary()
+"""
+import os 
 
 #%%
 
@@ -94,12 +121,6 @@ for task in train_data:
     for sample in task['test']:
         test_input_list.append(enhance_mat_30x30(sample['input']))
         test_output_list.append(enhance_mat_30x30(sample['output']))
-
-
-
-#%%
-
-
 
 
 #%%
@@ -173,9 +194,18 @@ history = model.fit(
         np.array(y_train_unique_colors_sum),
         np.array(y_train_unique_colors_cat)
         ],
-    epochs=100)
+    epochs=500)
 
-print('training time {} minutes'.format((time.time()-start)/60)
+print('training time {} minutes'.format(round(time.time()-start)/60))
+
+
+#%%
+
+log = logger('three_input_feature_extraction_model')
+log.save_experiment(model, history)
+
+
+#%%
 
 
 #%%
@@ -183,6 +213,7 @@ import matplotlib.pyplot as plt
 
 plt.plot(range(len(history.history['loss'])), history.history['loss'])
 plt.title('training loss')
+plt.savefig('data/{}.PNG'.format(log.name))
 plt.show()
 
 

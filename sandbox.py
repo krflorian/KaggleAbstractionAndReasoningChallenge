@@ -10,6 +10,7 @@ import time
 import random
 
 #tensorflow
+
 from tensorflow.keras.layers import Input, Dense, Flatten, Conv2D, MaxPooling2D, concatenate, Subtract, Dropout
 from tensorflow.keras.models import Model, load_model
 from tensorflow.keras.losses import categorical_crossentropy
@@ -21,6 +22,7 @@ np.random.seed(0)  # Set a random seed for reproducibility
 # utils
 import utils.file_handling as io
 from utils import plotting as plt # TODO rename shortcut
+from utils import pretrain_task as pretrain
 
 
 
@@ -121,6 +123,146 @@ for task in train_data:
     for sample in task['test']:
         test_input_list.append(enhance_mat_30x30(sample['input']))
         test_output_list.append(enhance_mat_30x30(sample['output']))
+
+#%%
+# Raphael
+# Prepare data for pretrain tasks
+
+"""
+The model will learn to predict which transformations happend to the input task.
+
+ONE !11 transformation will be applied at the task at each time.
+
+Input1 - task_1_input
+Input2 - task_2_input
+Input3 - task_2_output
+
+TODO:
+Would this be better?
+    Input1
+    Output1
+    Input2
+    Output2
+
+Output1 - output1_row
+Output2 - output1_col
+TODO: >> Output3 - unique_col_sum (will use this from input_1)
+TODO: >> Output4 - unique_col_cat (will use this from input_1)
+Output5 - rotation_angle
+Output6 - row or column removed
+Output7 - line number of removed
+Output8 - line or column shifted
+Output9 - line number of shifted
+
+"""
+
+train_input_1 = []
+train_input_2 = []
+train_output_2 = []
+
+y_train_col_len  = []
+y_train_row_len  = []
+y_train_unique_colors_sum = []
+y_train_unique_colors_cat = []
+y_train_rotation_angle = []
+y_train_line_or_column_removed = []
+y_train_line_nr_removed = []
+y_train_line_or_column_shifted = []
+y_train_line_nr_shifted = []
+
+cnt = 0
+
+for task in train_data:
+    for sample in task['train']:
+        input_1 = sample['input']
+
+        sample_2 = {'input':[]}
+        while sample_2['input'] != input_1:
+            sample_2 = random.choice(task['train'])
+            
+        input_2 = sample_2['input']
+        
+        if len(input_1) < 2 or len(input_2) < 2 or len(input_1[0]) < 2 or len(input_2[0]) < 2:
+            cnt = cnt + 1
+            continue
+        
+        train_input_1.append(enhance_mat_30x30(input_1))
+        
+        y_train_unique_colors_sum.append(len(set(flatten(sample['input']))))
+        y_train_unique_colors_cat.append([i in unique_colors for i in range(10)])
+        
+        # do not enhance bc. transformation need to be applied
+        train_input_2.append(input_2)
+        
+        
+print("cnmt")
+print(cnt)
+y_rotation_task_list, y_rotation_angle =  pretrain.rotate_tasks(train_input_2)
+
+y_line_shifted, y_row_or_column_shifted, y_line_nr_shifted = pretrain.shift_line_tasks(train_input_2)
+
+y_line_removed, y_row_or_column_removed, y_line_nr_removed = pretrain.remove_line_tasks(train_input_2)
+
+
+
+# No I want to do some one_hot_encode stuff
+# Transformation1 | Transformation2 | Transformation 3 ...
+#               0 |               1 |                0
+
+# 1. Copy train_input_1 3 times in this list
+# 2. Copy train_input_2 3 times in this list
+# 3. Y_rotation_angle = fill up with 0 accordingly
+# 4. y_row_or_column_removed = fill up accordingly 
+# 5. y_train_line_nr_removed = fill up accordingly 
+# 6. y_row_or_column_shifted = fill up accordingly 
+# 7. y_train_line_nr_shifted = fill up accordingly 
+
+
+# Print lens to be safe
+print(len(train_input_1))
+print(len(train_input_2))
+print(len(y_rotation_task_list))
+print(len(y_rotation_angle))
+print(len(y_line_shifted))
+print(len(y_row_or_column_shifted))
+print(len(y_line_nr_shifted))
+
+print(len(y_line_removed))
+print(len(y_row_or_column_removed))
+print(len(y_line_nr_removed))
+
+print(len(y_train_unique_colors_sum))
+print(len(y_train_unique_colors_cat))
+
+
+zeros = [0] * 1214
+
+print(len(zeros))
+
+# 0)
+train_input_2 = [enhance_mat_30x30(el) for el in train_input_2]
+
+# 1) 2)
+train_input_1 = train_input_1 + train_input_1 + train_input_1
+train_input_2 = train_input_2 + train_input_2 + train_input_2
+
+# 2)
+
+train_output_2 = [enhance_mat_30x30(el) for el in y_rotation_task_list]
+train_input_2 = train_output_2 + [enhance_mat_30x30(el) for el in y_line_shifted]
+train_input_2 = train_output_2 + [enhance_mat_30x30(el) for el in y_line_removed]
+
+# 3)
+y_rotation_angle = y_rotation_angle + zeros + zeros
+
+# 4)
+y_row_or_column_shifted = zeros + y_row_or_column_shifted + zeros
+y_line_nr_shifted = zeros + y_line_nr_shifted + zeros
+y_train_line_or_column_removed = zeros + y_train_line_or_column_removed + zeros
+
+# 5)
+y_row_or_column_removed = zeros + zeros + y_row_or_column_removed
+y_line_nr_removed = zeros + zeros + y_line_nr_removed
 
 
 #%%

@@ -7,6 +7,7 @@ Pretrain task:
 5. Predict how many colors changed in target
 6. Predict ratio of figure/background in target 
 7. Predict how many "objects" are in input and output
+8. Multiply img - predict how often it's multiplied
 
 Idea:
 1. Model Input = (input, output)

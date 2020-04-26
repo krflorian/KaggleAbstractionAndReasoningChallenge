@@ -1,4 +1,4 @@
-from plotting import plot_matrix
+from utils.plotting import plot_matrix
 import random
 from collections import Counter
 from itertools import chain
@@ -36,7 +36,7 @@ ROW_OR_COLUMN = [
 
 # TODO: think if 10 should be here aswell
 # TODO: think if 9 should be here
-COLORS = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+COLORS = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
 
 def get_task_list_copy(task_list):
     return copy.deepcopy(task_list)
@@ -79,12 +79,15 @@ def remove_line_tasks(task_list):
         row_or_col = random.choice(ROW_OR_COLUMN)
         y_row_or_column.append(row_or_col)
         
+        line_nr = 0
+        
         if row_or_col == 1:
-            line_nr = random.choice(range(len(task[0])))
-        else:
             line_nr = random.choice(range(len(task)))
+        else:
+            line_nr = random.choice(range(len(task[0])))
             
-        y_line_nr.append(line_nr)
+        y_line_nr.append(line_nr + 1)
+        
         removed_line_task_list.append(remove_line(task, row_or_col, line_nr))
     return removed_line_task_list, y_row_or_column, y_line_nr
 
@@ -192,12 +195,14 @@ def shift_line_tasks(task_list):
         row_or_col = random.choice(ROW_OR_COLUMN)
         y_row_or_column.append(row_or_col)
         
+        line_nr = 0
+        
         if row_or_col == 1:
-            line_nr = random.choice(range(len(task[0])))
-        else:
             line_nr = random.choice(range(len(task)))
+        else:
+            line_nr = random.choice(range(len(task[0])))
             
-        y_line_nr.append(line_nr)
+        y_line_nr.append(line_nr + 1)
         shifted_line_task_list.append(shift_line(task, row_or_col, line_nr))
     return shifted_line_task_list, y_row_or_column, y_line_nr
 
@@ -216,9 +221,9 @@ def shift_row(task, row_nr):
     return task[row_nr].insert(0, task[row_nr].pop())
 
 def shift_column(task, col_nr):
-    task = rotate_task(task, angle=1)
-    task[col_nr].insert(0, task[col_nr].pop())
-    task = rotate_task(task, angle=3)
+    task_rot = rotate_task(task, angle=1)
+    task_rot[col_nr].insert(0, task_rot[col_nr].pop())
+    task = rotate_task(task_rot, angle=3)
     return task
     
 if __name__ == "__main__":

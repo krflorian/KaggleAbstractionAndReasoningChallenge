@@ -44,7 +44,7 @@ def generate_pretrain_data(pretrain_functions, task_list):
         
         enhanced_pretrain_tasks = [enhance_mat_30x30(task) for task in pretrain_result[0]]
         
-        modified_tasks.extend(pretrain_result[0])
+        modified_tasks.extend(enhanced_pretrain_tasks)
         
         for i in range(1, len(pretrain_result)):
             y_labels = pretrain_result[i]

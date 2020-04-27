@@ -38,6 +38,18 @@ ROW_OR_COLUMN = [
 # TODO: think if 9 should be here
 COLORS = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
 
+FIFTY_FIFTY = [
+    True,
+    False,
+]
+
+SEVENTYFIVE_PERCENT = [
+    True,
+    True,
+    True,
+    False,
+]
+
 def get_task_list_copy(task_list):
     return copy.deepcopy(task_list)
 
@@ -225,6 +237,50 @@ def shift_column(task, col_nr):
     task_rot[col_nr].insert(0, task_rot[col_nr].pop())
     task = rotate_task(task_rot, angle=3)
     return task
+
+
+# Takes a task list
+# Multiplies this task 2 or 4 times (if size is possible < 30)
+# Result ->
+# | task | task |
+
+# or
+# | task |
+# | task |
+
+#or
+# | task | task |
+# | task | task |
+# returns altered task list + 
+# y_labels with 1, 2, 4 (how often task is in altered task)
+def multiply_tasks(task_list):
+    task_list = get_task_list_copy(task_list)
+    multiplied_task_list = []
+    
+    y_multiply = []
+    
+    for task in task_list:
+        factor = 1
+        if len(task) < 16:
+            if random.choice(SEVENTYFIVE_PERCENT):
+                task = multiply_row(task)
+                factor = 2
+        if len(task[0]) < 16:
+            if random.choice(SEVENTYFIVE_PERCENT):
+                task = multiply_col(task)
+                factor = factor + 2
+
+        multiplied_task_list.append(task)
+        y_multiply.append(factor)
+    return multiplied_task_list, y_multiply
+    
+def multiply_row(task):
+    return task + task
+
+def multiply_col(task):
+    task = rotate_task(task, angle=1)
+    task = multiply_row(task)
+    return rotate_task(task, angle=3)
     
 if __name__ == "__main__":
     test_task_1 = [[1, 1, 1], [2, 2, 2], [3, 3, 3]]
@@ -273,6 +329,12 @@ if __name__ == "__main__":
     print(y_row_or_column)
     print(y_line_nr)
     
+    print("Multiply task:")
+    multiplied_test_task_list, y_multiply = multiply_tasks(test_task_list)
+    plot_matrix(test_task_list[2])
+    plot_matrix(multiplied_test_task_list[2])
+    print(multiplied_test_task_list)
+    print(y_multiply)
 
     # To verify that the original list is unchanged
     print('Should be unchanged: ')

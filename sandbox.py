@@ -150,18 +150,6 @@ Would this be better?
 Would this be better?
     Input1
     Output1
-
-
-Output1 - output1_row
-Output2 - output1_col
-TODO: >> Output3 - unique_col_sum (will use this from input_1)
-TODO: >> Output4 - unique_col_cat (will use this from input_1)
-Output5 - rotation_angle
-Output6 - row or column removed
-Output7 - line number of removed
-Output8 - line or column shifted
-Output9 - line number of shifted
-
 """
 
 train_input_1 = []

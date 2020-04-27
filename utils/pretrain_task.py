@@ -21,6 +21,8 @@ def change_random_color_tasks(task_list):
     return changed_color_task_list, y_old_color, y_new_color
 def shift_line_tasks(task_list):
     return shifted_line_task_list, y_row_or_column, y_line_nr
+def multiply_tasks(task_list):
+    return multiplied_task_list, y_multiply
 """
 
 ANGLE_LIST = [
@@ -331,8 +333,8 @@ if __name__ == "__main__":
     
     print("Multiply task:")
     multiplied_test_task_list, y_multiply = multiply_tasks(test_task_list)
-    plot_matrix(test_task_list[2])
-    plot_matrix(multiplied_test_task_list[2])
+    #plot_matrix(test_task_list[2])
+    #plot_matrix(multiplied_test_task_list[2])
     print(multiplied_test_task_list)
     print(y_multiply)
 

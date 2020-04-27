@@ -237,12 +237,7 @@ print(len(y_line_nr_removed))
 print(len(y_train_unique_colors_sum))
 print(len(y_train_unique_colors_cat))
 
-# used for pretrain tasks except multiply
 zeros = [0] * 1214
-
-# used for multiply
-# if no multiply is applied size factor = 1
-ones = [1] * 1214
 
 print(len(zeros))
 
@@ -275,7 +270,7 @@ y_row_or_column_removed = zeros + zeros + y_row_or_column_removed + zeros
 y_line_nr_removed = zeros + zeros + y_line_nr_removed + zeros
 
 # 6)
-y_multiply = ones + ones + ones + y_multiply 
+y_multiply = zeros + zeros + zeros + y_multiply 
 
 
 #%%

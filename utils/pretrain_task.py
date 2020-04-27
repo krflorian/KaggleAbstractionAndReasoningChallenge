@@ -1,4 +1,4 @@
-from utils.plotting import plot_matrix
+from plotting import plot_matrix
 import random
 from collections import Counter
 from itertools import chain
@@ -262,15 +262,15 @@ def multiply_tasks(task_list):
     y_multiply = []
     
     for task in task_list:
-        factor = 1
+        factor = 0
         if len(task) < 16:
             if random.choice(SEVENTYFIVE_PERCENT):
                 task = multiply_row(task)
-                factor = 2
+                factor = factor + 1
         if len(task[0]) < 16:
             if random.choice(SEVENTYFIVE_PERCENT):
                 task = multiply_col(task)
-                factor = factor + 2
+                factor = factor + 1
 
         multiplied_task_list.append(task)
         y_multiply.append(factor)
@@ -343,4 +343,3 @@ if __name__ == "__main__":
     print(test_task_list)
     
     assert test_task_list == [[[1, 1, 1], [2, 2, 2], [3, 3, 3]], [[3, 3, 3], [2, 2, 2], [1, 1, 1]], [[1, 2, 3], [2, 2, 3], [3, 3, 3]]]
-    

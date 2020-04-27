@@ -14,10 +14,10 @@ It will take two lists:
 Returns:
 ==========
 1. list of modified tasks
-2. list of y_label lists for regression tasks
+2. list of y_label lists
 """
 
-import pretrain_task as pretrain
+import utils.pretrain_task as pretrain
 import numpy as np
 
 

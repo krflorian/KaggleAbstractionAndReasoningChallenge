@@ -1,4 +1,4 @@
-from plotting import plot_matrix
+from utils.plotting import plot_matrix
 import random
 from collections import Counter
 from itertools import chain

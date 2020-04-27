@@ -25,6 +25,7 @@ np.random.seed(0)  # Set a random seed for reproducibility
 import utils.file_handling as io
 from utils import plotting as plt # TODO rename shortcut
 from utils import pretrain_task as pretrain
+from utils import pretrain_data_generator as pretrain_generator
 
 
 
@@ -127,8 +128,8 @@ for task in train_data:
         test_output_list.append(enhance_mat_30x30(sample['output']))
 
 #%%
-# Raphael
-# Prepare data for pretrain tasks
+
+# Raphael using pretrain_data_generator
 
 """
 The model will learn to predict which transformations happend to the input task.
@@ -164,13 +165,8 @@ train_output_2 = []
 
 y_train_col_len  = []
 y_train_row_len  = []
-y_train_unique_colors_sum = []
-y_train_unique_colors_cat = []
-y_train_rotation_angle = []
-y_train_line_or_column_removed = []
-y_train_line_nr_removed = []
-y_train_line_or_column_shifted = []
-y_train_line_nr_shifted = []
+
+y_labels = []
 
 cnt = 0
 
@@ -190,88 +186,41 @@ for task in train_data:
         
         train_input_1.append(enhance_mat_30x30(input_1))
         
-        y_train_unique_colors_sum.append(len(set(flatten(sample['input']))))
-        y_train_unique_colors_cat.append([i in unique_colors for i in range(10)])
-        
         # do not enhance bc. transformation need to be applied
         train_input_2.append(input_2)
-        
-        
-print("Counter: ")
-print(cnt)
-y_rotation_task_list, y_rotation_angle =  pretrain.rotate_tasks(train_input_2)
-
-y_line_shifted, y_row_or_column_shifted, y_line_nr_shifted = pretrain.shift_line_tasks(train_input_2)
-
-y_line_removed, y_row_or_column_removed, y_line_nr_removed = pretrain.remove_line_tasks(train_input_2)
-
-y_multiplied_tasks, y_multiply = pretrain.multiply_tasks(train_input_2)
-
-# No I want to do some one_hot_encode stuff
-# Transformation1 | Transformation2 | Transformation 3 ...
-#               0 |               1 |                0
-
-# 1. Copy train_input_1 3 times in this list
-# 2. Copy train_input_2 3 times in this list
-# 3. Y_rotation_angle = fill up with 0 accordingly
-# 4. y_row_or_column_removed = fill up accordingly 
-# 5. y_train_line_nr_removed = fill up accordingly 
-# 6. y_row_or_column_shifted = fill up accordingly 
-# 7. y_train_line_nr_shifted = fill up accordingly 
-# 8. y_multiply
 
 
-# Print lens to be safe
-print(len(train_input_1))
-print(len(train_input_2))
-print(len(y_rotation_task_list))
-print(len(y_rotation_angle))
-print(len(y_line_shifted))
-print(len(y_row_or_column_shifted))
-print(len(y_line_nr_shifted))
+PRETRAIN_FUNCTIONS = [
+    pretrain.rotate_tasks,
+    pretrain.multiply_tasks,
+    pretrain.change_random_color_tasks,
+    pretrain.remove_line_tasks,
+    pretrain.shift_line_tasks,
+]
 
-print(len(y_line_removed))
-print(len(y_row_or_column_removed))
-print(len(y_line_nr_removed))
 
-print(len(y_train_unique_colors_sum))
-print(len(y_train_unique_colors_cat))
+train_output_2, y_labels = pretrain_generator.generate_pretrain_data(PRETRAIN_FUNCTIONS, train_input_2)
 
-zeros = [0] * 1214
+train_input_2 = [enhance_mat_30x30(task) for task in train_input_2]
 
-print(len(zeros))
+train_input_1_final = []
+train_input_2_final = []
 
-# TODO refactor this to a method in a way
-# that an arbitrary number of pretrain tasks can be easily applied
+for i in range(len(PRETRAIN_FUNCTIONS)):
+    train_input_1_final = train_input_1_final + train_input_1
+    train_input_2_final = train_input_2_final + train_input_2
+    
+print("LEN train_input_1")
+print(len(train_input_1_final))
 
-# 0)
-train_input_2 = [enhance_mat_30x30(el) for el in train_input_2]
+print("LEN train_input_2")
+print(len(train_input_2_final))
 
-# 1) 2)
-train_input_1 = train_input_1 + train_input_1 + train_input_1 + train_input_1
-train_input_2 = train_input_2 + train_input_2 + train_input_2 + train_input_2 
+print("LEN train_output_2")
+print(len(train_output_2))
 
-# 2)
-train_output_2 = [enhance_mat_30x30(el) for el in y_rotation_task_list]
-train_output_2 = train_output_2 + [enhance_mat_30x30(el) for el in y_line_shifted]
-train_output_2 = train_output_2 + [enhance_mat_30x30(el) for el in y_line_removed]
-train_output_2 = train_output_2 + [enhance_mat_30x30(el) for el in y_multiplied_tasks]
-
-# 3)
-y_rotation_angle = y_rotation_angle + zeros + zeros + zeros
-
-# 4)
-y_row_or_column_shifted = zeros + y_row_or_column_shifted + zeros + zeros
-y_line_nr_shifted = zeros + y_line_nr_shifted + zeros + zeros
-y_train_line_or_column_removed = zeros + y_train_line_or_column_removed + zeros + zeros
-
-# 5)
-y_row_or_column_removed = zeros + zeros + y_row_or_column_removed + zeros
-y_line_nr_removed = zeros + zeros + y_line_nr_removed + zeros
-
-# 6)
-y_multiply = zeros + zeros + zeros + y_multiply 
-
+print("LEN y_labels")
+print(len(y_labels[0]))
 
 #%%
 

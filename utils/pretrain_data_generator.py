@@ -15,6 +15,8 @@ Returns:
 ==========
 1. list of modified tasks
 2. list of y_label lists
+3. list of y_row_len
+4. list of y_col_len
 """
 
 import utils.pretrain_task as pretrain
@@ -30,10 +32,19 @@ def generate_pretrain_data(pretrain_functions, task_list):
     # this list will contain all the y_label list of the pretrain tasks
     y_labels_list = []
     
+    y_row_len = []
+    y_col_len = []
+    
     for counter, pretrain_result in enumerate(tmp_result):
+        y_col = [len(task) for task in pretrain_result[0]]
+        y_row = [len(task[0]) for task in pretrain_result[0]]
+        
+        y_col_len.extend(y_col)
+        y_row_len.extend(y_row)
+        
         enhanced_pretrain_tasks = [enhance_mat_30x30(task) for task in pretrain_result[0]]
         
-        modified_tasks.extend(enhanced_pretrain_tasks)
+        modified_tasks.extend(pretrain_result[0])
         
         for i in range(1, len(pretrain_result)):
             y_labels = pretrain_result[i]
@@ -45,7 +56,7 @@ def generate_pretrain_data(pretrain_functions, task_list):
         
             y_labels_list.append(y_labels)
     
-    return modified_tasks, y_labels_list
+    return modified_tasks, y_labels_list, y_row_len, y_col_len
 
 
 def enhance_mat_30x30(mat):

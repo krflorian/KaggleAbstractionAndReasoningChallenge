@@ -146,6 +146,11 @@ Would this be better?
     Output1
     Input2
     Output2
+    
+Would this be better?
+    Input1
+    Output1
+
 
 Output1 - output1_row
 Output2 - output1_col
@@ -162,9 +167,6 @@ Output9 - line number of shifted
 train_input_1 = []
 train_input_2 = []
 train_output_2 = []
-
-y_train_col_len  = []
-y_train_row_len  = []
 
 y_labels = []
 
@@ -198,8 +200,7 @@ PRETRAIN_FUNCTIONS = [
     pretrain.shift_line_tasks,
 ]
 
-
-train_output_2, y_labels = pretrain_generator.generate_pretrain_data(PRETRAIN_FUNCTIONS, train_input_2)
+train_output_2, y_labels, y_train_row_len, y_train_col_len = pretrain_generator.generate_pretrain_data(PRETRAIN_FUNCTIONS, train_input_2)
 
 train_input_2 = [enhance_mat_30x30(task) for task in train_input_2]
 
@@ -221,6 +222,14 @@ print(len(train_output_2))
 
 print("LEN y_labels")
 print(len(y_labels[0]))
+
+print("LEN y_train_row_len")
+print(len(y_train_row_len))
+
+print("LEN y_train_col_len")
+print(len(y_train_col_len))
+
+
 
 #%%
 

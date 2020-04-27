@@ -5,8 +5,10 @@
 import os
 import numpy as np
 import pandas as pd
+
 import json
 import time 
+
 import random
 
 #tensorflow
@@ -195,7 +197,7 @@ for task in train_data:
         train_input_2.append(input_2)
         
         
-print("cnmt")
+print("Counter: ")
 print(cnt)
 y_rotation_task_list, y_rotation_angle =  pretrain.rotate_tasks(train_input_2)
 
@@ -203,7 +205,7 @@ y_line_shifted, y_row_or_column_shifted, y_line_nr_shifted = pretrain.shift_line
 
 y_line_removed, y_row_or_column_removed, y_line_nr_removed = pretrain.remove_line_tasks(train_input_2)
 
-
+y_multiplied_tasks, y_multiply = pretrain.multiply_tasks(train_input_2)
 
 # No I want to do some one_hot_encode stuff
 # Transformation1 | Transformation2 | Transformation 3 ...
@@ -216,6 +218,7 @@ y_line_removed, y_row_or_column_removed, y_line_nr_removed = pretrain.remove_lin
 # 5. y_train_line_nr_removed = fill up accordingly 
 # 6. y_row_or_column_shifted = fill up accordingly 
 # 7. y_train_line_nr_shifted = fill up accordingly 
+# 8. y_multiply
 
 
 # Print lens to be safe
@@ -234,35 +237,45 @@ print(len(y_line_nr_removed))
 print(len(y_train_unique_colors_sum))
 print(len(y_train_unique_colors_cat))
 
-
+# used for pretrain tasks except multiply
 zeros = [0] * 1214
 
+# used for multiply
+# if no multiply is applied size factor = 1
+ones = [1] * 1214
+
 print(len(zeros))
+
+# TODO refactor this to a method in a way
+# that an arbitrary number of pretrain tasks can be easily applied
 
 # 0)
 train_input_2 = [enhance_mat_30x30(el) for el in train_input_2]
 
 # 1) 2)
-train_input_1 = train_input_1 + train_input_1 + train_input_1
-train_input_2 = train_input_2 + train_input_2 + train_input_2
+train_input_1 = train_input_1 + train_input_1 + train_input_1 + train_input_1
+train_input_2 = train_input_2 + train_input_2 + train_input_2 + train_input_2 
 
 # 2)
-
 train_output_2 = [enhance_mat_30x30(el) for el in y_rotation_task_list]
-train_input_2 = train_output_2 + [enhance_mat_30x30(el) for el in y_line_shifted]
-train_input_2 = train_output_2 + [enhance_mat_30x30(el) for el in y_line_removed]
+train_output_2 = train_output_2 + [enhance_mat_30x30(el) for el in y_line_shifted]
+train_output_2 = train_output_2 + [enhance_mat_30x30(el) for el in y_line_removed]
+train_output_2 = train_output_2 + [enhance_mat_30x30(el) for el in y_multiplied_tasks]
 
 # 3)
-y_rotation_angle = y_rotation_angle + zeros + zeros
+y_rotation_angle = y_rotation_angle + zeros + zeros + zeros
 
 # 4)
-y_row_or_column_shifted = zeros + y_row_or_column_shifted + zeros
-y_line_nr_shifted = zeros + y_line_nr_shifted + zeros
-y_train_line_or_column_removed = zeros + y_train_line_or_column_removed + zeros
+y_row_or_column_shifted = zeros + y_row_or_column_shifted + zeros + zeros
+y_line_nr_shifted = zeros + y_line_nr_shifted + zeros + zeros
+y_train_line_or_column_removed = zeros + y_train_line_or_column_removed + zeros + zeros
 
 # 5)
-y_row_or_column_removed = zeros + zeros + y_row_or_column_removed
-y_line_nr_removed = zeros + zeros + y_line_nr_removed
+y_row_or_column_removed = zeros + zeros + y_row_or_column_removed + zeros
+y_line_nr_removed = zeros + zeros + y_line_nr_removed + zeros
+
+# 6)
+y_multiply = ones + ones + ones + y_multiply 
 
 
 #%%

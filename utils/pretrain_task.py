@@ -232,13 +232,13 @@ def shift_line(task, row_or_col, line_nr):
         return shift_column(task, line_nr)
 
 def shift_row(task, row_nr):
-    return task[row_nr].insert(0, task[row_nr].pop())
+    task[row_nr].insert(0, task[row_nr].pop())
+    return task
 
 def shift_column(task, col_nr):
     task_rot = rotate_task(task, angle=1)
     task_rot[col_nr].insert(0, task_rot[col_nr].pop())
-    task = rotate_task(task_rot, angle=3)
-    return task
+    return rotate_task(task_rot, angle=3)
 
 
 # Takes a task list

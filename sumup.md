@@ -14,6 +14,14 @@ Idea:
    1. take output from other input sometimes
    2. model has to predict if output belongs to input or not
 
+
+OPEN QUESTIONS:
+1. is our input good?
+   1. Should we change to single task input?
+   2. Benefits would be much more train data - since we can use every picture for pretrain tasks
+   3. Shortcomings would be: how should the model learn to predict size?
+   4. But how is this currently handled?
+
 Questions:
 
 Ideas:

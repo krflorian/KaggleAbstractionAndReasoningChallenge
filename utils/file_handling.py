@@ -18,6 +18,8 @@ def get_tasks(path):
     return train_task_list
 
 
-
+def save_json(path):
+    with open(path, 'w') as outfile:
+        json.dump(data, outfile)
 
 

@@ -193,7 +193,7 @@ history = model.fit(
         np.array(y_train_row_len),
         np.array(y_train_unique_colors_sum),
         np.array(y_train_unique_colors_cat)
-        ],
+    ],
     epochs=500)
 
 print('training time {} minutes'.format(round(time.time()-start)/60))

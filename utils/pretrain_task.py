@@ -1,4 +1,4 @@
-from utils.plotting import plot_matrix
+from plotting import plot_matrix
 import random
 from collections import Counter
 from itertools import chain
@@ -23,6 +23,10 @@ def shift_line_tasks(task_list):
     return shifted_line_task_list, y_row_or_column, y_line_nr
 def multiply_tasks(task_list):
     return multiplied_task_list, y_multiply
+def multiply_rotation_tasks(task_list):
+    return multiplied_rot_tasks, y_multiplied_rot
+def mirror_tasks(task_list):
+    return mirrored_task_list, y_mirror
 """
 
 ANGLE_LIST = [
@@ -283,6 +287,70 @@ def multiply_col(task):
     task = rotate_task(task, angle=1)
     task = multiply_row(task)
     return rotate_task(task, angle=3)
+
+# Works like multiply_tasks
+# But it rotatets the tasks to mirror them
+def multiply_rotation_tasks(task_list):
+    task_list = get_task_list_copy(task_list)
+    multiplied_rot_tasks = []
+    
+    y_multiplied_rot = []
+    
+    for task in task_list:
+        factor = 0
+        if len(task) < 16:
+            if random.choice(SEVENTYFIVE_PERCENT):
+                task = multiply_rotation_row(task)
+                factor = factor + 1
+        if len(task[0]) < 16:
+            if random.choice(SEVENTYFIVE_PERCENT):
+                task = multiply_rotation_col(task)
+                factor = factor + 1
+
+        multiplied_rot_tasks.append(task)
+        y_multiplied_rot.append(factor)
+    return multiplied_rot_tasks, y_multiplied_rot
+    
+def multiply_rotation_row(task):
+    return task + rotate_task(task, angle=2)
+
+def multiply_rotation_col(task):
+    task = rotate_task(task, angle=1)
+    task = multiply_rotation_row(task)
+    return rotate_task(task, angle=3)
+
+# works like multiply
+# but mirrors the task
+# which will result in symmetric output pictures
+def mirror_tasks(task_list):
+    task_list = get_task_list_copy(task_list)
+    mirrored_task_list = []
+    
+    y_mirror = []
+    
+    for task in task_list:
+        factor = 0
+        if len(task) < 16:
+            if random.choice(SEVENTYFIVE_PERCENT):
+                task = mirror_row(task)
+                factor = factor + 1
+        if len(task[0]) < 16:
+            if random.choice(SEVENTYFIVE_PERCENT):
+                task = mirror_col(task)
+                factor = factor + 1
+
+        mirrored_task_list.append(task)
+        y_mirror.append(factor)
+    return mirrored_task_list, y_mirror
+
+def mirror_row(task):
+    return task + task[::-1]
+    
+def mirror_col(task):
+    task = rotate_task(task, angle=1)
+    task = mirror_row(task)
+    return rotate_task(task, angle=3)
+
     
 if __name__ == "__main__":
     test_task_1 = [[1, 1, 1], [2, 2, 2], [3, 3, 3]]
@@ -337,6 +405,20 @@ if __name__ == "__main__":
     #plot_matrix(multiplied_test_task_list[2])
     print(multiplied_test_task_list)
     print(y_multiply)
+    
+    print("Multiply with rotation task:")
+    multiplied_rot_test_task_list, y_multiplied_rot = multiply_rotation_tasks(test_task_list)
+    #plot_matrix(test_task_list[2])
+    #plot_matrix(multiplied_rot_test_task_list[2])
+    print(multiplied_rot_test_task_list)
+    print(y_multiplied_rot)
+    
+    print("Multiply with rotation task:")
+    mirrored_test_task_list, y_mirror = mirror_tasks(test_task_list)
+    #plot_matrix(test_task_list[2])
+    #plot_matrix(mirrored_test_task_list[2])
+    print(mirrored_test_task_list)
+    print(y_mirror)    
 
     # To verify that the original list is unchanged
     print('Should be unchanged: ')

@@ -68,15 +68,6 @@ class logger:
         log.loss = loss
         return model
 
-
-def enhance_mat_30x30(mat):
-    empty_array = np.full((30, 30), 0, dtype=np.float32)
-    if(len(mat) != 0):
-        mat = np.asarray(mat, dtype=np.float32)
-        empty_array[:mat.shape[0], : mat.shape[1]] = mat
-        
-    return np.expand_dims(empty_array, axis= 2) 
-
 #%%
 train_input = []
 
@@ -119,7 +110,7 @@ PRETRAIN_FUNCTIONS = [
     pretrain.shift_line_tasks,
     pretrain.multiply_rotation_tasks,
     pretrain.mirror_tasks,
-    pretrain.double_line_with_multiple_colors_tasks,
+    #pretrain.double_line_with_multiple_colors_tasks,
 ]
 
 train_output, y_labels, y_train_row_len, y_train_col_len = pretrain_generator.generate_pretrain_data(PRETRAIN_FUNCTIONS, train_input)
@@ -189,8 +180,8 @@ out_9 = Dense(1, activation='linear', name='removed_line_nr')(out_9)
 out_11 = Dense(128, activation='relu')(merge)
 out_11 = Dense(1, activation='linear', name='shifted_line_nr')(out_11)
 
-out_14 = Dense(128, activation='relu')(merge)
-out_14 = Dense(1, activation='linear', name='doubled_line_nr')(out_14)
+# out_15 = Dense(128, activation='relu')(merge)
+# out_15 = Dense(1, activation='linear', name='doubled_line_nr')(out_15)
 
 # multi-label classification layers
 out_4 = Dense(128, activation='relu')(merge)
@@ -211,14 +202,14 @@ out_8 = Dense(3, activation='sigmoid', name='removed_row_or_column')(out_8)
 out_10 = Dense(128, activation='relu')(merge)
 out_10 = Dense(3, activation='sigmoid', name='shifted_row_or_column')(out_10)
 
-out_11 = Dense(128, activation='relu')(merge)
-out_11 = Dense(3, activation='sigmoid', name='multiply_rotation_factor')(out_11)
-
 out_12 = Dense(128, activation='relu')(merge)
-out_12 = Dense(3, activation='sigmoid', name='multiply_mirror_factor')(out_12)
+out_12 = Dense(3, activation='sigmoid', name='multiply_rotation_factor')(out_12)
 
 out_13 = Dense(128, activation='relu')(merge)
-out_13 = Dense(3, activation='sigmoid', name='doubled_row_or_column')(out_13)
+out_13 = Dense(3, activation='sigmoid', name='multiply_mirror_factor')(out_13)
+
+# out_14 = Dense(128, activation='relu')(merge)
+# out_14 = Dense(3, activation='sigmoid', name='doubled_row_or_column')(out_14)
 
 
 model = Model(inputs=[input_, output_], outputs=[
@@ -226,7 +217,7 @@ model = Model(inputs=[input_, output_], outputs=[
     out_5, out_6, out_7,
     out_8, out_9, out_10,
     out_11, out_12, out_13,
-    out_14
+    # out_14, out_15
     ])
 
 opt = Adam(lr=1e-3, decay=1e-3)
@@ -239,12 +230,12 @@ losses = {
     "multiply_factor": "binary_crossentropy",
     "changed_color_old": "binary_crossentropy",
     "changed_color_new": "binary_crossentropy",
-    "removed_line_or_column": "binary_crossentropy",
-    "shifted_line_or_column": "binary_crossentropy",
+    "removed_row_or_column": "binary_crossentropy",
+    "shifted_row_or_column": "binary_crossentropy",
     "multiply_rotation_factor": "binary_crossentropy",
     "multiply_mirror_factor": "binary_crossentropy",
-    "doubled_row_or_column": "binary_crossentropy",
-    "doubled_line_nr": "mean_absolute_error"
+    # "doubled_row_or_column": "binary_crossentropy",
+    # "doubled_line_nr": "mean_absolute_error"
     }
 
 model.compile(loss=losses, optimizer=opt)
@@ -272,8 +263,10 @@ history = model.fit(
         np.array(y_labels[5]),
         np.array(to_categorical(y_labels[6])),
         np.array(y_labels[7]),
+        np.array(to_categorical(y_labels[8])),
+        np.array(to_categorical(y_labels[9])),
     ],
-    epochs=5)
+    epochs=100)
 
 print('training time {} minutes'.format(round(time.time()-start)/60))
 

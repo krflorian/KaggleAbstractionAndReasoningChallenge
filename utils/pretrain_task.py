@@ -1,4 +1,4 @@
-from plotting import plot_matrix
+from utils.plotting import plot_matrix
 import random
 from collections import Counter
 from itertools import chain
@@ -27,6 +27,8 @@ def multiply_rotation_tasks(task_list):
     return multiplied_rot_tasks, y_multiplied_rot
 def mirror_tasks(task_list):
     return mirrored_task_list, y_mirror
+def double_line_with_multiple_colors_tasks(task_list):
+    return double_line_task_list, y_row_or_column, y_line_nr
 """
 
 ANGLE_LIST = [
@@ -351,6 +353,60 @@ def mirror_col(task):
     task = mirror_row(task)
     return rotate_task(task, angle=3)
 
+def double_line_with_multiple_colors_tasks(task_list):
+    task_list = get_task_list_copy(task_list)
+    double_line_task_list = []
+    y_row_or_column = []
+    y_line_nr = []
+    
+    for task in task_list:
+        row_or_col = random.choice(ROW_OR_COLUMN)
+        
+        
+        possible_lines = []
+        
+        if row_or_col == 1:
+            possible_lines = get_row_with_multiple_colors(task)
+            if len(possible_lines) == 0:
+                possible_lines = get_col_with_multiple_colors(task)
+                row_or_col = 2
+        else:
+            possible_lines = get_col_with_multiple_colors(task)
+            if len(possible_lines) == 0:
+                possible_lines = get_row_with_multiple_colors(task)
+                row_or_col = 1
+        
+        y_row_or_column.append(row_or_col)
+            
+        line_nr = random.choice(possible_lines)
+        y_line_nr.append(line_nr)
+        
+        double_line_task_list.append(double_line(row_or_col, task, line_nr))
+    return double_line_task_list, y_row_or_column, y_line_nr
+    
+def get_row_with_multiple_colors(task):
+    line_nr = []
+    for idx, row in enumerate(task):
+        if len(set(row)) > 1:
+            line_nr.append(idx)
+    return line_nr
+
+def get_col_with_multiple_colors(task):
+    return get_row_with_multiple_colors(rotate_task(task, angle=1))
+
+def double_line(row_or_col, task, line_nr):
+    if row_or_col == 1:
+        return double_row(task, line_nr)
+    else:
+        return double_col(task, line_nr)
+
+def double_row(task, row_nr):
+    task.insert(row_nr, task[row_nr])
+    return task
+
+def double_col(task, col_nr):
+    rot_task = double_row(rotate_task(task, angle=1), col_nr)
+    return rotate_task(rot_task, angle=3)
     
 if __name__ == "__main__":
     test_task_1 = [[1, 1, 1], [2, 2, 2], [3, 3, 3]]
@@ -419,6 +475,14 @@ if __name__ == "__main__":
     #plot_matrix(mirrored_test_task_list[2])
     print(mirrored_test_task_list)
     print(y_mirror)    
+    
+    print("Double line with multiple colors:")
+    doubled_line_test_task_list, y_row_or_column, y_line_nr = double_line_with_multiple_colors_tasks(test_task_list)
+    #plot_matrix(test_task_list[2])
+    #plot_matrix(doubled_line_test_task_list[2])
+    print(doubled_line_test_task_list)
+    print(y_row_or_column)
+    print(y_line_nr)
 
     # To verify that the original list is unchanged
     print('Should be unchanged: ')

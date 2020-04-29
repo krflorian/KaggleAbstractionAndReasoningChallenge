@@ -16,6 +16,7 @@ import random
 from tensorflow.keras.layers import Input, Dense, Flatten, Conv2D, MaxPooling2D, concatenate, Subtract, Dropout
 from tensorflow.keras.models import Model, load_model
 from tensorflow.keras.losses import categorical_crossentropy
+
 from tensorflow.keras.optimizers import Adam
 
 from tensorflow.keras.utils import to_categorical
@@ -328,7 +329,7 @@ out_6 = Dense(128, activation='relu')(merge)
 out_6 = Dense(10, activation='sigmoid', name='changed_color_old')(out_6)
 
 out_7 = Dense(128, activation='relu')(merge)
-out_7 = Dense(3, activation='sigmoid', name='changed_color_new')(out_7)
+out_7 = Dense(10, activation='sigmoid', name='changed_color_new')(out_7)
 
 out_8 = Dense(128, activation='relu')(merge)
 out_8 = Dense(3, activation='sigmoid', name='removed_line_or_column')(out_8)
@@ -358,7 +359,7 @@ losses = {
 model.compile(loss=losses, optimizer=opt)
 
 #%%
-train_output_final_2 = [np.array(el) for el in train_output_2]
+train_output_2_final = [np.array(el) for el in train_output_2]
 
 #%%
 start = time.time()
@@ -367,7 +368,7 @@ history = model.fit(
     [
         np.array(train_input_1_final),
         np.array(train_input_2_final),
-        np.array(train_output_final_2)
+        np.array(train_output_2_final)
     ],
     [
         np.array(y_train_col_len),
@@ -394,7 +395,7 @@ to_categorical(y_labels[0])
 
 #%%
 
-log = logger('three_input_feature_extraction_model')
+log = logger('pretrain_task_model_3_inputs')
 log.save_experiment(model, history)
 
 

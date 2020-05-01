@@ -132,5 +132,7 @@ dmypy.json
 # project 
 evaluation/
 training/
+weights/
+weights_frozen/
 .vscode/
 *.code-workspace

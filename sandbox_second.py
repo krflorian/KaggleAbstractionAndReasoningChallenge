@@ -12,11 +12,10 @@ import time
 import random
 
 #tensorflow
-
 from tensorflow.keras.layers import Input, Dense, Flatten, Conv2D, MaxPooling2D, concatenate, Subtract, Dropout
 from tensorflow.keras.models import Model, load_model
 from tensorflow.keras.losses import categorical_crossentropy
-
+from tensorflow.keras.estimator import model_to_estimator
 from tensorflow.keras.optimizers import Adam
 
 from tensorflow.keras.utils import to_categorical
@@ -26,6 +25,7 @@ np.random.seed(0)  # Set a random seed for reproducibility
 
 # utils
 import utils.file_handling as io
+from utils.logging import Logger
 from utils import plotting as plt # TODO rename shortcut
 from utils import pretrain_task as pretrain
 from utils import pretrain_data_generator as pretrain_generator
@@ -35,41 +35,19 @@ from utils import pretrain_data_generator as pretrain_generator
 training_path = os.getcwd()+'/data/training/'
 train_data = io.get_tasks(training_path)
 
-class logger:
-    def __init__(self, ID):
-        self.name = ID
-        self.loss = {}
-        self.model = None
-        self.model_path = 'data/weights/{}.h5'.format(ID)
-        self.logs_path = 'data/logs/{}.json'.format(ID)
 
-    def save_experiment(self, model, history):
-        self.model = model 
+def enhance_mat_30x30(mat):
+    empty_array = np.full((30, 30), 0, dtype=np.float32)
+    if(len(mat) != 0):
+        mat = np.asarray(mat, dtype=np.float32)
+        empty_array[:mat.shape[0], : mat.shape[1]] = mat
         
-        # save NN
-        model.save(self.model_path)
-
-        # save loss
-        loss = history.history
-        for l in loss:
-            loss[l] = [float(num) for num in loss[l]]
-        self.loss = loss
-        print(os.getcwd())
-        with open(self.logs_path, 'w') as json_file:
-            json.dump(self.loss, json_file)
-
-    def load_experiment(self):
-        # load model
-        model = load_model(self.model_path)
-
-        # load loss
-        with open(self.logs_path, 'r') as json_file:
-            loss = json.load(json_file)
-        log.loss = loss
-        return model
+    return np.expand_dims(empty_array, axis= 2) 
 
 #%%
 train_input = []
+test_input = []
+test_output = []
 
 cnt = 0
 # use all the tasks in train
@@ -89,6 +67,11 @@ for task in train_data:
             train_input.append(_output)
         else:
             cnt += 1
+    for sample in task['test']:
+        test_input.append(enhance_mat_30x30(sample['input']))
+        test_output.append(enhance_mat_30x30(sample['output']))
+
+
 
 print('Thrown away samples: ')
 print(cnt)
@@ -169,44 +152,44 @@ pretrain.double_line_with_multiple_colors_tasks,
 
 # regression layers
 out_1 = Dense(128, activation='relu')(merge)
-out_1 = Dense(1, activation='linear', name='rows')(out_1)
+out_1 = Dense(1, activation='linear', name='fzn_rows')(out_1)
 
 out_2 = Dense(128, activation='relu')(merge)
-out_2 = Dense(1, activation='linear', name='cols')(out_2)
+out_2 = Dense(1, activation='linear', name='fzn_cols')(out_2)
 
 out_9 = Dense(128, activation='relu')(merge)
-out_9 = Dense(1, activation='linear', name='removed_line_nr')(out_9)
+out_9 = Dense(1, activation='linear', name='fzn_removed_line_nr')(out_9)
 
 out_11 = Dense(128, activation='relu')(merge)
-out_11 = Dense(1, activation='linear', name='shifted_line_nr')(out_11)
+out_11 = Dense(1, activation='linear', name='fzn_shifted_line_nr')(out_11)
 
 # out_15 = Dense(128, activation='relu')(merge)
 # out_15 = Dense(1, activation='linear', name='doubled_line_nr')(out_15)
 
 # multi-label classification layers
 out_4 = Dense(128, activation='relu')(merge)
-out_4 = Dense(4, activation='sigmoid', name='rotation_angle')(out_4)
+out_4 = Dense(4, activation='sigmoid', name='fzn_rotation_angle')(out_4)
 
 out_5 = Dense(128, activation='relu')(merge)
-out_5 = Dense(3, activation='sigmoid', name='multiply_factor')(out_5)
+out_5 = Dense(3, activation='sigmoid', name='fzn_multiply_factor')(out_5)
 
 out_6 = Dense(128, activation='relu')(merge)
-out_6 = Dense(10, activation='sigmoid', name='changed_color_old')(out_6)
+out_6 = Dense(10, activation='sigmoid', name='fzn_changed_color_old')(out_6)
 
 out_7 = Dense(128, activation='relu')(merge)
-out_7 = Dense(10, activation='sigmoid', name='changed_color_new')(out_7)
+out_7 = Dense(10, activation='sigmoid', name='fzn_changed_color_new')(out_7)
 
 out_8 = Dense(128, activation='relu')(merge)
-out_8 = Dense(3, activation='sigmoid', name='removed_row_or_column')(out_8)
+out_8 = Dense(3, activation='sigmoid', name='fzn_removed_row_or_column')(out_8)
 
 out_10 = Dense(128, activation='relu')(merge)
-out_10 = Dense(3, activation='sigmoid', name='shifted_row_or_column')(out_10)
+out_10 = Dense(3, activation='sigmoid', name='fzn_shifted_row_or_column')(out_10)
 
 out_12 = Dense(128, activation='relu')(merge)
-out_12 = Dense(3, activation='sigmoid', name='multiply_rotation_factor')(out_12)
+out_12 = Dense(3, activation='sigmoid', name='fzn_multiply_rotation_factor')(out_12)
 
 out_13 = Dense(128, activation='relu')(merge)
-out_13 = Dense(3, activation='sigmoid', name='multiply_mirror_factor')(out_13)
+out_13 = Dense(3, activation='sigmoid', name='fzn_multiply_mirror_factor')(out_13)
 
 # out_14 = Dense(128, activation='relu')(merge)
 # out_14 = Dense(3, activation='sigmoid', name='doubled_row_or_column')(out_14)
@@ -222,18 +205,18 @@ model = Model(inputs=[input_, output_], outputs=[
 
 opt = Adam(lr=1e-3, decay=1e-3)
 losses = {
-    "rows": "mean_absolute_error",
-    "cols": "mean_absolute_error",
-    "removed_line_nr": "mean_absolute_error",
-    "shifted_line_nr": "mean_absolute_error",
-    "rotation_angle": "binary_crossentropy",
-    "multiply_factor": "binary_crossentropy",
-    "changed_color_old": "binary_crossentropy",
-    "changed_color_new": "binary_crossentropy",
-    "removed_row_or_column": "binary_crossentropy",
-    "shifted_row_or_column": "binary_crossentropy",
-    "multiply_rotation_factor": "binary_crossentropy",
-    "multiply_mirror_factor": "binary_crossentropy",
+    "fzn_rows": "mean_absolute_error",
+    "fzn_cols": "mean_absolute_error",
+    "fzn_removed_line_nr": "mean_absolute_error",
+    "fzn_shifted_line_nr": "mean_absolute_error",
+    "fzn_rotation_angle": "binary_crossentropy",
+    "fzn_multiply_factor": "binary_crossentropy",
+    "fzn_changed_color_old": "binary_crossentropy",
+    "fzn_changed_color_new": "binary_crossentropy",
+    "fzn_removed_row_or_column": "binary_crossentropy",
+    "fzn_shifted_row_or_column": "binary_crossentropy",
+    "fzn_multiply_rotation_factor": "binary_crossentropy",
+    "fzn_multiply_mirror_factor": "binary_crossentropy",
     # "doubled_row_or_column": "binary_crossentropy",
     # "doubled_line_nr": "mean_absolute_error"
     }
@@ -271,8 +254,81 @@ history = model.fit(
 print('training time {} minutes'.format(round(time.time()-start)/60))
 
 #%%
-log = logger('2_input_5_pretrain')
+
+log = Logger('2_input_12_pretrain')
 log.save_experiment(model, history)
 
 #%%
-plt.plot_loss(log, 'loss', save=False)
+
+plt.plot_loss(log, 'loss', save=True)
+
+#%%
+
+log = Logger('2_input_12_pretrain')
+model = log.load_experiment()
+model.summary()
+
+#%%
+"""
+path_frozen = 'data/weights_frozen/{}'.format(log.name)
+if not os.path.exists(path_frozen):
+    os.mkdir(path_frozen)
+model.save(path_frozen)
+"""
+
+#%%
+
+for layer in model.layers:
+    if not layer.name.startswith('fzn_'):
+        layer.trainable = False 
+    #model.layers.pop()
+model.summary()
+
+
+#%%
+# predict whole task model
+
+input_test_task = Input(shape=(30, 30, 1), name='test_input')
+input_frozen_model = concatenate(model.output)
+
+# convolution layers
+x_test = Conv2D(64, (3, 3), activation='relu')(input_test_task)
+x_test = MaxPooling2D(pool_size=(2, 2))(x_test)
+x_test = Dropout(0.25)(x_test)
+x_test = Flatten()(x_test)
+
+# merge frozen layers
+merge_frozen = concatenate([
+    x_test,
+    input_frozen_model
+     ]) 
+
+# out layers
+out_final = Dense(128, activation='relu')(merge_frozen)
+out_final = Dense(128, activation='relu')(out_final)
+out_final = Dense(11, activation='softmax', name='final_output')(out_final)
+
+new_model = Model(
+    inputs=[
+        input_test_task,
+        model.input], 
+    outputs=[
+        out_final
+    ])
+
+opt = Adam(lr=1e-3, decay=1e-3)
+losses = {
+    "final_output": "binary_crossentropy"
+    }
+
+new_model.compile(loss=losses, optimizer=opt)
+
+
+#%%
+
+y_hat = new_model.predict([
+    np.array(test_input),
+    np.array(train_input),
+    np.array(train_output)
+    ])
+

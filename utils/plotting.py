@@ -15,6 +15,9 @@ def plot_matrix(mat):
     plt.show()
 
 def plot_loss(log, metric = 'loss', save = False):
+    """
+    plots loss from Logger object
+    """
     plt.plot(range(len(log.loss[metric])), log.loss[metric])
     plt.title('training {}'.format(metric))
     if save:

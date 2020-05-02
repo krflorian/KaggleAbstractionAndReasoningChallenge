@@ -46,8 +46,6 @@ def enhance_mat_30x30(mat):
 
 #%%
 train_input = []
-test_input = []
-test_output = []
 
 cnt = 0
 # use all the tasks in train
@@ -67,11 +65,7 @@ for task in train_data:
             train_input.append(_output)
         else:
             cnt += 1
-    for sample in task['test']:
-        test_input.append(enhance_mat_30x30(sample['input']))
-        test_output.append(enhance_mat_30x30(sample['output']))
-
-
+    
 
 print('Thrown away samples: ')
 print(cnt)
@@ -124,6 +118,12 @@ print(len(y_train_col_len))
 
 
 #%%
+
+len(train_input)
+len(train_output)
+len(test_input)
+
+
 #%%
 # Raphael Model
 # input
@@ -278,9 +278,8 @@ model.save(path_frozen)
 
 #%%
 
-for layer in model.layers:
-    if not layer.name.startswith('fzn_'):
-        layer.trainable = False 
+for layer in model.layers[:-12]:
+    layer.trainable = False 
     #model.layers.pop()
 model.summary()
 
@@ -289,13 +288,13 @@ model.summary()
 # predict whole task model
 
 input_test_task = Input(shape=(30, 30, 1), name='test_input')
-input_frozen_model = concatenate(model.output)
+input_frozen_model = concatenate(model.output, name='concat_frozen_layers')
 
 # convolution layers
-x_test = Conv2D(64, (3, 3), activation='relu')(input_test_task)
-x_test = MaxPooling2D(pool_size=(2, 2))(x_test)
-x_test = Dropout(0.25)(x_test)
-x_test = Flatten()(x_test)
+x_test = Conv2D(64, (3, 3), activation='relu', name='test_convolution')(input_test_task)
+x_test = MaxPooling2D(pool_size=(2, 2), name='test_pooling')(x_test)
+x_test = Dropout(0.25, name='test_dropout')(x_test)
+x_test = Flatten(name='test_flatten')(x_test)
 
 # merge frozen layers
 merge_frozen = concatenate([
@@ -304,24 +303,65 @@ merge_frozen = concatenate([
      ]) 
 
 # out layers
-out_final = Dense(128, activation='relu')(merge_frozen)
-out_final = Dense(128, activation='relu')(out_final)
-out_final = Dense(11, activation='softmax', name='final_output')(out_final)
+out_final = Dense(128, activation='relu', name='test_out_dense_1')(merge_frozen)
+out_final = Dense(128, activation='relu', name='test_out_dense_2')(out_final)
+
+out_final_list = []
+for i in range(900):
+        out_final_list.append(Dense(10, activation='softmax', name=str('ouput_' + str(i)))(out_final))
 
 new_model = Model(
     inputs=[
         input_test_task,
         model.input], 
     outputs=[
-        out_final
+        out_final_list
     ])
 
 opt = Adam(lr=1e-3, decay=1e-3)
-losses = {
-    "final_output": "binary_crossentropy"
-    }
 
-new_model.compile(loss=losses, optimizer=opt)
+new_model.compile(loss="binary_crossentropy", optimizer=opt)
+
+new_model.summary()
+
+#%%
+# final task generation
+
+
+train_input = []
+train_output = []
+test_input = []
+test_output = []
+
+cnt = 0
+# use all the tasks in train
+# use input and output
+
+for task in train_data:
+    for sample in task['train']:
+        _input = sample['input']
+        _output = sample['output']
+                
+        if (len(_input) > 1) & (len(_output) > 1):
+            train_input.append(enhance_mat_30x30(_input))
+            train_output.append(enhance_mat_30x30(_output))
+            test_input.append(enhance_mat_30x30(task['test'][0]['input']))
+            test_output.append(enhance_mat_30x30(task['test'][0]['output']))
+        else:
+            cnt += 1
+
+    
+print('Thrown away samples: ')
+print(cnt)
+
+print('Total train input samples: ')
+print(len(train_input))
+
+print('Total train input samples: ')
+print(len(train_output))
+
+print('Total test samples: ')
+print(len(test_input))
 
 
 #%%
@@ -331,4 +371,51 @@ y_hat = new_model.predict([
     np.array(train_input),
     np.array(train_output)
     ])
+
+#%%
+# post processing 
+
+y_hat_processed = []
+
+for i in range(len(y_hat[0])):
+    y_hat_processed.append([])
+    for pixel in y_hat:
+        y_hat_processed[i].append(np.argmax(pixel[i]))
+
+
+
+# %%
+# plot output 
+
+plt.plot_matrix(np.array(y_hat_processed[0]).reshape(30, 30))
+
+
+#%%
+
+
+test_output_processed = []
+for i in range(900):
+    test_output_processed.append([])
+
+for task in test_output:
+    all_pixel = to_categorical(test_output[0].flatten(), num_classes=10)
+    for i in range(900):
+        test_output_processed[i].append(all_pixel[i])
+
+
+#%%
+# train final model
+
+new_model.fit([
+    np.array(test_input),
+    np.array(train_input),
+    np.array(train_output)
+    ],
+    test_output_processed,
+    epochs=100
+    )
+
+
+# %%
+
 

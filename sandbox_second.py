@@ -300,7 +300,7 @@ x_test = Flatten(name='test_flatten')(x_test)
 merge_frozen = concatenate([
     x_test,
     input_frozen_model
-     ]) 
+     ], name='concat_test_frozen') 
 
 # out layers
 out_final = Dense(128, activation='relu', name='test_out_dense_1')(merge_frozen)
@@ -364,24 +364,6 @@ print('Total test samples: ')
 print(len(test_input))
 
 
-#%%
-
-y_hat = new_model.predict([
-    np.array(test_input),
-    np.array(train_input),
-    np.array(train_output)
-    ])
-
-#%%
-# post processing 
-
-y_hat_processed = []
-
-for i in range(len(y_hat[0])):
-    y_hat_processed.append([])
-    for pixel in y_hat:
-        y_hat_processed[i].append(np.argmax(pixel[i]))
-
 
 
 # %%
@@ -406,16 +388,44 @@ for task in test_output:
 #%%
 # train final model
 
-new_model.fit([
+history = new_model.fit([
     np.array(test_input),
     np.array(train_input),
     np.array(train_output)
     ],
     test_output_processed,
-    epochs=100
+    epochs=100,
+    verbose = 1
     )
 
 
 # %%
 
+history = new_model.history
 
+log = Logger('final_model_0.0')
+log.save_experiment(new_model, history)
+
+
+#%%
+
+plt.plot_loss(log, 'loss', save=True)
+
+
+#%%
+
+y_hat = new_model.predict([
+    np.array(test_input),
+    np.array(train_input),
+    np.array(train_output)
+    ])
+
+#%%
+# post processing 
+
+y_hat_processed = []
+
+for i in range(len(y_hat[0])):
+    y_hat_processed.append([])
+    for pixel in y_hat:
+        y_hat_processed[i].append(np.argmax(pixel[i]))

@@ -349,7 +349,6 @@ for task in train_data:
         else:
             cnt += 1
 
-    
 print('Thrown away samples: ')
 print(cnt)
 
@@ -385,6 +384,13 @@ plt.plot_matrix(test_output[1].reshape(30, 30))
 
 
 #%%
+
+plt.plot_matrix(test_input[7].reshape(30, 30))
+plt.plot_matrix(train_input[7].reshape(30, 30))
+plt.plot_matrix(train_output[7].reshape(30, 30))
+plt.plot_matrix(test_output[7].reshape(30, 30))
+
+#%%
 # train final model
 
 history = new_model.fit([
@@ -393,8 +399,8 @@ history = new_model.fit([
     np.array(train_output)
     ],
     test_output_processed,
-    epochs=100,
-    verbose = 1
+    epochs=10,
+    verbose=1
     )
 
 

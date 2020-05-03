@@ -327,7 +327,6 @@ new_model.summary()
 #%%
 # final task generation
 
-
 train_input = []
 train_output = []
 test_input = []
@@ -364,14 +363,6 @@ print('Total test samples: ')
 print(len(test_input))
 
 
-
-
-# %%
-# plot output 
-
-plt.plot_matrix(np.array(y_hat_processed[0]).reshape(30, 30))
-
-
 #%%
 
 
@@ -383,6 +374,13 @@ for task in test_output:
     all_pixel = to_categorical(test_output[0].flatten(), num_classes=10)
     for i in range(900):
         test_output_processed[i].append(all_pixel[i])
+
+#%%
+
+plt.plot_matrix(test_input[0].reshape(30, 30))
+plt.plot_matrix(train_input[0].reshape(30, 30))
+plt.plot_matrix(train_output[0].reshape(30, 30))
+plt.plot_matrix(test_output[0].reshape(30, 30))
 
 
 #%%

@@ -138,6 +138,61 @@ print(len(test_input))
 
 
 #%%
+# create more training data
+import copy 
+
+task_lists = [train_input, train_output, test_input, test_output]
+# shift right
+def shift_right(task_lists, i=0):
+
+    print('original number of tasks: ', len(task_lists[0]))
+    for i_task in range(i, len(task_lists[0])):
+        check = []
+        for task_list in task_lists:
+            # check if column on the right is completely black
+            check.append(all([row[-1] == 0 for row in task_list[i_task]]))
+        if all(check):
+            for task_list in task_lists:
+                new_task = copy.deepcopy(task_list[i_task].tolist())
+                for row in new_task:
+                    row.pop(-1)
+                    row.insert(0, [0.0]) # insert zero on first position
+                task_list.append(np.array(new_task))
+        
+    print('new number of tasks: ', len(task_lists[0]))
+    return task_lists, i_task
+
+i = 0
+for counter in range(30):
+    print('\nloop number ', counter)
+    task_lists, i = shift_right(task_lists, i)
+print('end of task creation')
+train_input, train_output, test_input, test_output = task_lists[0], task_lists[1], task_lists[2], task_lists[3]
+
+
+#%%
+
+plt.plot_matrix(test_input[1].reshape(30, 30))
+plt.plot_matrix(train_input[1].reshape(30, 30))
+plt.plot_matrix(train_output[1].reshape(30, 30))
+plt.plot_matrix(test_output[1].reshape(30, 30))
+
+#%%
+
+plt.plot_matrix(test_input[4677].reshape(30, 30))
+plt.plot_matrix(train_input[4677].reshape(30, 30))
+plt.plot_matrix(train_output[4677].reshape(30, 30))
+plt.plot_matrix(test_output[4677].reshape(30, 30))
+
+
+#%%
+
+plt.plot_matrix(test_input[7].reshape(30, 30))
+plt.plot_matrix(train_input[7].reshape(30, 30))
+plt.plot_matrix(train_output[7].reshape(30, 30))
+plt.plot_matrix(test_output[7].reshape(30, 30))
+
+#%%
 
 
 test_output_processed = []
@@ -151,21 +206,6 @@ for task in test_output:
 
 
 #%%
-
-plt.plot_matrix(test_input[1].reshape(30, 30))
-plt.plot_matrix(train_input[1].reshape(30, 30))
-plt.plot_matrix(train_output[1].reshape(30, 30))
-plt.plot_matrix(test_output[1].reshape(30, 30))
-
-
-#%%
-
-plt.plot_matrix(test_input[7].reshape(30, 30))
-plt.plot_matrix(train_input[7].reshape(30, 30))
-plt.plot_matrix(train_output[7].reshape(30, 30))
-plt.plot_matrix(test_output[7].reshape(30, 30))
-
-#%%
 # train final model
 
 history = new_model.fit([
@@ -174,14 +214,13 @@ history = new_model.fit([
     np.array(train_output)
     ],
     test_output_processed,
-    epochs=10,
+    epochs=100,
     verbose=1
     )
 
 
 # %%
 
-history = new_model.history
 
 log = Logger('final_model_10_epochs')
 log.save_experiment(new_model, history)

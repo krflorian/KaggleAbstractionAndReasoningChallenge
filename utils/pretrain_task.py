@@ -42,7 +42,7 @@ ROW_OR_COLUMN = [
     2, # remove column
 ]
 
-# TODO: think if 10 should be here aswell
+# TODO: think if 10 should be here aswell - NO 10 would be a second zero it can be the same
 # TODO: think if 9 should be here
 COLORS = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
 

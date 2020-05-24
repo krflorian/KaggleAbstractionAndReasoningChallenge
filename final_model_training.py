@@ -215,14 +215,14 @@ history = new_model.fit([
     ],
     test_output_processed,
     epochs=100,
-    verbose=1
+    verbose=0
     )
 
 
 # %%
 
-
-log = Logger('final_model_10_epochs')
+history = new_model.history
+log = Logger('final_model_unknown_epochs')
 log.save_experiment(new_model, history)
 
 
